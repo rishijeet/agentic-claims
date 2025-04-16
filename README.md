@@ -15,12 +15,12 @@ Agentic Claims is designed to streamline the dispute resolution process by:
 
 ## Features
 
-- 🤖 AI-powered dispute resolution using local models
-- 💬 Real-time chat interface with instant responses
-- 🎨 Modern Material-UI design with enterprise-grade styling
-- 🔄 WebSocket-based communication for seamless interaction
-- 📱 Responsive design that works on all devices
-- 🔒 Local processing with no external API dependencies
+- AI-powered dispute resolution using local models
+- Real-time chat interface with instant responses
+- Modern Material-UI design with enterprise-grade styling
+- WebSocket-based communication for seamless interaction
+- Responsive design that works on all devices
+- Local processing with no external API dependencies
 
 ## Technology Stack
 
