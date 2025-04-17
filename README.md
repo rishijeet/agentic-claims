@@ -4,6 +4,9 @@
 
 A modern web application that provides an AI-powered chatbot interface for automated dispute resolution. The system uses local AI models to dynamically collect information about merchant communication, PIN usage, and transaction details to set up claims without human intervention.
 
+<img width="1280" alt="Screenshot 2025-04-17 at 9 20 05 PM" src="https://github.com/user-attachments/assets/7aa87139-c9da-42fb-b40b-91e213bee438" />
+
+
 ## Overview
 
 Agentic Claims is designed to streamline the dispute resolution process by:
