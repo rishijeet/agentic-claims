@@ -2,221 +2,243 @@
  * @author Rishijeet
  */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Box, 
-  Paper, 
   TextField, 
   Button, 
+  Paper, 
   Typography, 
+  Avatar, 
   List, 
   ListItem, 
-  ListItemText,
-  CircularProgress,
-  Avatar,
+  ListItemText, 
+  ListItemAvatar,
   Divider,
-  IconButton,
-  Tooltip
+  CircularProgress
 } from '@mui/material';
-import { io, Socket } from 'socket.io-client';
-import SendIcon from '@mui/icons-material/Send';
-import PersonIcon from '@mui/icons-material/Person';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import InfoIcon from '@mui/icons-material/Info';
+import { 
+  Send as SendIcon, 
+  Person as PersonIcon, 
+  SmartToy as BotIcon 
+} from '@mui/icons-material';
 
 interface Message {
+  id: string;
   text: string;
-  sender: 'user' | 'bot';
+  sender: 'user' | 'agent';
   timestamp: Date;
 }
 
-const ChatInterface: React.FC = () => {
-  const [socket, setSocket] = useState<Socket | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<null | HTMLDivElement>(null);
+interface ChatInterfaceProps {
+  customerContext?: any;
+  messages?: Message[];
+  onMessagesChange?: (messages: Message[]) => void;
+}
 
-  useEffect(() => {
-    const newSocket = io('http://localhost:5050');
-    setSocket(newSocket);
-
-    newSocket.on('botResponse', (response: string) => {
-      setMessages(prev => [...prev, {
-        text: response,
-        sender: 'bot',
-        timestamp: new Date()
-      }]);
-      setIsLoading(false);
-    });
-
-    return () => {
-      newSocket.close();
-    };
-  }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleStartDispute = () => {
-    if (socket) {
-      setIsLoading(true);
-      socket.emit('startDispute');
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
+  customerContext, 
+  messages: externalMessages, 
+  onMessagesChange 
+}) => {
+  const [internalMessages, setInternalMessages] = useState<Message[]>([
+    {
+      id: '1',
+      text: 'Hello! I\'m your dispute resolution assistant. How can I help you today?',
+      sender: 'agent',
+      timestamp: new Date()
     }
+  ]);
+  
+  const messages = externalMessages || internalMessages;
+  const setMessages = onMessagesChange || setInternalMessages;
+  
+  const [inputText, setInputText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const contextAddedRef = useRef<boolean>(false);
+
+  // Add initial context message if customer is selected
+  useEffect(() => {
+    if (customerContext && !contextAddedRef.current) {
+      const contextMessage: Message = {
+        id: Date.now().toString(),
+        text: `I see you're looking at ${customerContext.name}'s account. Their account number is ${customerContext.accountNumber} and they have a ${customerContext.accountType} account with a current balance of $${customerContext.balance.toFixed(2)}. How can I assist with their dispute?`,
+        sender: 'agent',
+        timestamp: new Date()
+      };
+      setMessages([...messages, contextMessage]);
+      contextAddedRef.current = true;
+    }
+  }, [customerContext]);
+
+  // Reset the context added flag when customer context changes
+  useEffect(() => {
+    if (customerContext) {
+      contextAddedRef.current = false;
+    } else {
+      contextAddedRef.current = true;
+    }
+  }, [customerContext?.id]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || !socket) return;
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    if (inputText.trim() === '') return;
 
     const newMessage: Message = {
-      text: inputMessage,
+      id: Date.now().toString(),
+      text: inputText,
       sender: 'user',
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, newMessage]);
-    socket.emit('userMessage', { message: inputMessage });
-    setInputMessage('');
-    setIsLoading(true);
+    setMessages([...messages, newMessage]);
+    setInputText('');
+    setIsTyping(true);
+
+    // Simulate agent response
+    setTimeout(() => {
+      const agentResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: generateAgentResponse(inputText, customerContext),
+        sender: 'agent',
+        timestamp: new Date()
+      };
+
+      setMessages([...messages, newMessage, agentResponse]);
+      setIsTyping(false);
+    }, 1500);
   };
 
-  const formatTimestamp = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(date);
+  const generateAgentResponse = (userMessage: string, customer: any): string => {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    // If we have customer context, provide more personalized responses
+    if (customer) {
+      if (lowerMessage.includes('transaction') || lowerMessage.includes('purchase')) {
+        return `I can see ${customer.name} has several recent transactions. Would you like me to review any specific transaction or help with a dispute related to one of their purchases?`;
+      } else if (lowerMessage.includes('balance') || lowerMessage.includes('account')) {
+        return `${customer.name}'s current balance is $${customer.balance.toFixed(2)}. Is there something specific about their account you'd like to know?`;
+      } else if (lowerMessage.includes('dispute') || lowerMessage.includes('charge')) {
+        return `I can help you file a dispute for ${customer.name}. To proceed, I'll need to know which transaction you're disputing and the reason for the dispute.`;
+      }
+    }
+    
+    // Generic responses if no customer context or no specific keywords
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+      return 'Hello! How can I assist you with your dispute today?';
+    } else if (lowerMessage.includes('dispute') || lowerMessage.includes('charge')) {
+      return 'I can help you file a dispute. To proceed, I\'ll need to know which transaction you\'re disputing and the reason for the dispute.';
+    } else if (lowerMessage.includes('time') || lowerMessage.includes('long')) {
+      return 'The dispute resolution process typically takes 10-14 business days. We\'ll keep you updated on the progress.';
+    } else if (lowerMessage.includes('thank')) {
+      return 'You\'re welcome! Is there anything else I can help you with?';
+    } else {
+      return "I understand you're having an issue with your debit card. Could you provide more details about the transaction you're disputing?";
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ 
-        p: 2, 
-        borderBottom: 1, 
-        borderColor: 'divider',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
-        <Typography variant="h6" component="h1" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <SmartToyIcon color="primary" />
-          Dispute Resolution Assistant
-        </Typography>
-        <Tooltip title="AI-powered assistant to help resolve your disputes">
-          <IconButton size="small">
-            <InfoIcon />
-          </IconButton>
-        </Tooltip>
-      </Box>
-
-      <List sx={{ 
-        flex: 1, 
-        overflow: 'auto', 
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 2
-      }}>
-        {messages.map((message, index) => (
-          <ListItem
-            key={index}
-            sx={{
-              justifyContent: message.sender === 'user' ? 'flex-end' : 'flex-start',
-              padding: 0,
-              gap: 1
-            }}
-          >
-            {message.sender === 'bot' && (
-              <Avatar sx={{ bgcolor: 'primary.main' }}>
-                <SmartToyIcon />
-              </Avatar>
-            )}
-            <Box sx={{ maxWidth: '70%' }}>
-              <Paper
-                elevation={1}
-                sx={{
-                  p: 2,
-                  backgroundColor: message.sender === 'user' ? 'primary.main' : 'grey.100',
+      <Box sx={{ flexGrow: 1, overflow: 'auto', mb: 2 }}>
+        <List>
+          {messages.map((message) => (
+            <ListItem 
+              key={message.id} 
+              alignItems="flex-start"
+              sx={{ 
+                flexDirection: message.sender === 'user' ? 'row-reverse' : 'row',
+                '& .MuiListItemAvatar-root': {
+                  minWidth: message.sender === 'user' ? '40px' : 'auto',
+                }
+              }}
+            >
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: message.sender === 'user' ? 'primary.main' : 'secondary.main' }}>
+                  {message.sender === 'user' ? <PersonIcon /> : <BotIcon />}
+                </Avatar>
+              </ListItemAvatar>
+              <Paper 
+                elevation={1} 
+                sx={{ 
+                  p: 2, 
+                  maxWidth: '70%',
+                  ml: message.sender === 'user' ? 0 : 2,
+                  mr: message.sender === 'user' ? 2 : 0,
+                  bgcolor: message.sender === 'user' ? 'primary.light' : 'grey.100',
                   color: message.sender === 'user' ? 'white' : 'text.primary',
-                  position: 'relative'
+                  borderRadius: 2
                 }}
               >
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {message.text}
-                </Typography>
-                <Typography 
-                  variant="caption" 
-                  sx={{ 
-                    position: 'absolute',
-                    bottom: -20,
-                    right: message.sender === 'user' ? 0 : 'auto',
-                    color: 'text.secondary'
+                <ListItemText 
+                  primary={message.text} 
+                  secondary={formatTime(message.timestamp)}
+                  secondaryTypographyProps={{ 
+                    sx: { 
+                      color: message.sender === 'user' ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary',
+                      fontSize: '0.7rem',
+                      textAlign: message.sender === 'user' ? 'right' : 'left'
+                    } 
                   }}
-                >
-                  {formatTimestamp(message.timestamp)}
-                </Typography>
+                />
               </Paper>
-            </Box>
-            {message.sender === 'user' && (
-              <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                <PersonIcon />
-              </Avatar>
-            )}
-          </ListItem>
-        ))}
-        {isLoading && (
-          <ListItem sx={{ justifyContent: 'center' }}>
-            <CircularProgress size={24} />
-          </ListItem>
-        )}
-        <div ref={messagesEndRef} />
-      </List>
-
+            </ListItem>
+          ))}
+          {isTyping && (
+            <ListItem>
+              <ListItemAvatar>
+                <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                  <BotIcon />
+                </Avatar>
+              </ListItemAvatar>
+              <Paper elevation={1} sx={{ p: 2, maxWidth: '70%', ml: 2, bgcolor: 'grey.100', borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  <CircularProgress size={16} sx={{ mr: 1 }} />
+                  <Typography variant="body2">Agent is typing...</Typography>
+                </Box>
+              </Paper>
+            </ListItem>
+          )}
+          <div ref={messagesEndRef} />
+        </List>
+      </Box>
+      
       <Divider />
-
-      <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-        {messages.length === 0 ? (
-          <Button
-            variant="contained"
-            fullWidth
-            onClick={handleStartDispute}
-            disabled={isLoading}
-            size="large"
-            startIcon={<SmartToyIcon />}
-          >
-            Start New Dispute
-          </Button>
-        ) : (
-          <form onSubmit={handleSendMessage}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                placeholder="Type your message..."
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                disabled={isLoading}
-                size="medium"
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 2
-                  }
-                }}
-              />
-              <Button
-                type="submit"
-                variant="contained"
-                disabled={isLoading || !inputMessage.trim()}
-                sx={{ minWidth: 100 }}
-                endIcon={<SendIcon />}
-              >
-                Send
-              </Button>
-            </Box>
-          </form>
-        )}
+      
+      <Box sx={{ display: 'flex', p: 2, pt: 1 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          placeholder="Type your message..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleSendMessage();
+            }
+          }}
+          sx={{ mr: 1 }}
+        />
+        <Button 
+          variant="contained" 
+          color="primary" 
+          endIcon={<SendIcon />}
+          onClick={handleSendMessage}
+          disabled={inputText.trim() === ''}
+        >
+          Send
+        </Button>
       </Box>
     </Box>
   );
