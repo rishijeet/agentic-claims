@@ -29,80 +29,47 @@ import {
   Pending as PendingIcon,
   Error as ErrorIcon,
   Info as InfoIcon,
-  Close as CloseIcon
+  Close as CloseIcon,
+  FiberManualRecord as StatusIcon
 } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
+import { DisputeCase } from '../types';
 
-interface DisputeCase {
-  id: string;
-  customerName: string;
-  status: 'pending' | 'in-progress' | 'resolved' | 'rejected';
-  type: string;
-  amount: number;
-  date: string;
-  priority: 'high' | 'medium' | 'low';
+interface AgentSidebarProps {
+  open?: boolean;
+  onClose?: () => void;
+  agentName?: string;
+  disputeCases: DisputeCase[];
 }
 
-const AgentSidebar: React.FC = () => {
-  const [open, setOpen] = useState(true);
-  const [selectedCase, setSelectedCase] = useState<string | null>(null);
+const AgentSidebar: React.FC<AgentSidebarProps> = ({ 
+  open = true, 
+  onClose,
+  agentName = 'John Doe',
+  disputeCases
+}) => {
+  const [selectedCase, setSelectedCase] = useState<DisputeCase | null>(null);
+  const theme = useTheme();
   
-  // Mock data for dispute cases
-  const disputeCases: DisputeCase[] = [
-    {
-      id: 'DISP-001',
-      customerName: 'John Smith',
-      status: 'in-progress',
-      type: 'Unauthorized Transaction',
-      amount: 125.50,
-      date: '2023-06-15',
-      priority: 'high'
-    },
-    {
-      id: 'DISP-002',
-      customerName: 'Sarah Johnson',
-      status: 'pending',
-      type: 'Double Charge',
-      amount: 75.00,
-      date: '2023-06-14',
-      priority: 'medium'
-    },
-    {
-      id: 'DISP-003',
-      customerName: 'Michael Brown',
-      status: 'resolved',
-      type: 'Failed Refund',
-      amount: 250.00,
-      date: '2023-06-13',
-      priority: 'low'
-    },
-    {
-      id: 'DISP-004',
-      customerName: 'Emily Davis',
-      status: 'rejected',
-      type: 'Quality Issue',
-      amount: 89.99,
-      date: '2023-06-12',
-      priority: 'medium'
-    }
-  ];
+  const handleCaseSelect = (case_: DisputeCase) => {
+    setSelectedCase(case_);
+  };
   
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
+      case 'open':
+        return <StatusIcon sx={{ color: 'success.main', fontSize: 12 }} />;
       case 'pending':
-        return <PendingIcon color="warning" />;
-      case 'in-progress':
-        return <InfoIcon color="info" />;
-      case 'resolved':
-        return <CheckCircleIcon color="success" />;
-      case 'rejected':
-        return <ErrorIcon color="error" />;
+        return <StatusIcon sx={{ color: 'warning.main', fontSize: 12 }} />;
+      case 'closed':
+        return <StatusIcon sx={{ color: 'error.main', fontSize: 12 }} />;
       default:
-        return <InfoIcon />;
+        return <StatusIcon sx={{ color: 'grey.500', fontSize: 12 }} />;
     }
   };
   
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
+    switch (priority.toLowerCase()) {
       case 'high':
         return 'error';
       case 'medium':
@@ -115,35 +82,38 @@ const AgentSidebar: React.FC = () => {
   };
   
   return (
-    <Paper 
-      elevation={3} 
-      sx={{ 
-        height: '100%', 
-        width: '300px', 
+    <Paper
+      elevation={3}
+      sx={{
+        width: 300,
+        height: '100%',
+        display: open ? 'block' : 'none',
         overflow: 'auto',
-        borderRadius: 0,
-        borderLeft: '1px solid rgba(0, 0, 0, 0.12)'
+        p: 2,
+        borderLeft: `1px solid ${theme.palette.divider}`,
       }}
     >
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Typography variant="h6" component="div">
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Agent Dashboard
         </Typography>
-        <IconButton size="small" onClick={() => setOpen(!open)}>
-          {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
+        {onClose && (
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        )}
       </Box>
       
-      <Divider />
-      
-      <Box sx={{ p: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
-            <PersonIcon />
+      <Box sx={{ mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', mr: 1 }}>
+            {agentName.charAt(0)}
           </Avatar>
           <Box>
-            <Typography variant="subtitle1">Agent Rishijeet</Typography>
-            <Typography variant="body2" color="text.secondary">Online</Typography>
+            <Typography variant="subtitle1">{agentName}</Typography>
+            <Typography variant="body2" color="success.main">
+              Online
+            </Typography>
           </Box>
         </Box>
         
@@ -175,8 +145,8 @@ const AgentSidebar: React.FC = () => {
             <React.Fragment key={case_.id}>
               <ListItem 
                 button 
-                selected={selectedCase === case_.id}
-                onClick={() => setSelectedCase(case_.id)}
+                selected={selectedCase === case_}
+                onClick={() => handleCaseSelect(case_)}
                 sx={{ 
                   borderRadius: 1,
                   mb: 1,
@@ -214,7 +184,7 @@ const AgentSidebar: React.FC = () => {
                   }
                 />
               </ListItem>
-              <Collapse in={selectedCase === case_.id} timeout="auto" unmountOnExit>
+              <Collapse in={selectedCase === case_} timeout="auto" unmountOnExit>
                 <Box sx={{ pl: 4, pr: 2, pb: 2 }}>
                   <Typography variant="body2" color="text.secondary">
                     <strong>Type:</strong> {case_.type}

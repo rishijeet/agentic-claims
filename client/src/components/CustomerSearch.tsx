@@ -32,130 +32,67 @@ import {
   LocationOn as LocationIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  AccountBalance as AccountIcon
+  AccountBalance as AccountIcon,
+  Add as AddIcon
 } from '@mui/icons-material';
-
-// Dummy customer data
-const dummyCustomers = [
-  {
-    id: 'CUST001',
-    name: 'John Smith',
-    email: 'john.smith@example.com',
-    phone: '(555) 123-4567',
-    address: '123 Main St, Anytown, CA 90210',
-    accountNumber: '**** **** **** 1234',
-    accountType: 'Checking',
-    balance: 2547.89,
-    transactions: [
-      { id: 'TXN001', date: '2023-06-15', merchant: 'Amazon', amount: -89.99, status: 'completed', type: 'purchase' },
-      { id: 'TXN002', date: '2023-06-14', merchant: 'Walmart', amount: -125.50, status: 'completed', type: 'purchase' },
-      { id: 'TXN003', date: '2023-06-13', merchant: 'Starbucks', amount: -4.75, status: 'completed', type: 'purchase' },
-      { id: 'TXN004', date: '2023-06-12', merchant: 'Netflix', amount: -14.99, status: 'completed', type: 'subscription' },
-      { id: 'TXN005', date: '2023-06-11', merchant: 'Salary Deposit', amount: 3200.00, status: 'completed', type: 'deposit' },
-      { id: 'TXN006', date: '2023-06-10', merchant: 'Target', amount: -65.25, status: 'completed', type: 'purchase' },
-      { id: 'TXN007', date: '2023-06-09', merchant: 'Uber', amount: -22.50, status: 'completed', type: 'transportation' },
-      { id: 'TXN008', date: '2023-06-08', merchant: 'Restaurant', amount: -45.80, status: 'completed', type: 'dining' },
-      { id: 'TXN009', date: '2023-06-07', merchant: 'Gas Station', amount: -35.20, status: 'completed', type: 'fuel' },
-      { id: 'TXN010', date: '2023-06-06', merchant: 'Online Shopping', amount: -78.30, status: 'completed', type: 'purchase' }
-    ]
-  },
-  {
-    id: 'CUST002',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@example.com',
-    phone: '(555) 234-5678',
-    address: '456 Oak Ave, Somewhere, NY 10001',
-    accountNumber: '**** **** **** 5678',
-    accountType: 'Savings',
-    balance: 8750.42,
-    transactions: [
-      { id: 'TXN011', date: '2023-06-15', merchant: 'Target', amount: -120.75, status: 'completed', type: 'purchase' },
-      { id: 'TXN012', date: '2023-06-14', merchant: 'Amazon', amount: -45.99, status: 'completed', type: 'purchase' },
-      { id: 'TXN013', date: '2023-06-13', merchant: 'Salary Deposit', amount: 2800.00, status: 'completed', type: 'deposit' },
-      { id: 'TXN014', date: '2023-06-12', merchant: 'Restaurant', amount: -65.30, status: 'completed', type: 'dining' },
-      { id: 'TXN015', date: '2023-06-11', merchant: 'Gym Membership', amount: -49.99, status: 'completed', type: 'subscription' },
-      { id: 'TXN016', date: '2023-06-10', merchant: 'Gas Station', amount: -42.50, status: 'completed', type: 'fuel' },
-      { id: 'TXN017', date: '2023-06-09', merchant: 'Online Shopping', amount: -95.25, status: 'completed', type: 'purchase' },
-      { id: 'TXN018', date: '2023-06-08', merchant: 'Uber', amount: -18.75, status: 'completed', type: 'transportation' },
-      { id: 'TXN019', date: '2023-06-07', merchant: 'Starbucks', amount: -5.25, status: 'completed', type: 'dining' },
-      { id: 'TXN020', date: '2023-06-06', merchant: 'Walmart', amount: -85.60, status: 'completed', type: 'purchase' }
-    ]
-  },
-  {
-    id: 'CUST003',
-    name: 'Michael Brown',
-    email: 'michael.brown@example.com',
-    phone: '(555) 345-6789',
-    address: '789 Pine St, Elsewhere, TX 75001',
-    accountNumber: '**** **** **** 9012',
-    accountType: 'Checking',
-    balance: 1250.75,
-    transactions: [
-      { id: 'TXN021', date: '2023-06-15', merchant: 'Restaurant', amount: -55.80, status: 'completed', type: 'dining' },
-      { id: 'TXN022', date: '2023-06-14', merchant: 'Salary Deposit', amount: 3500.00, status: 'completed', type: 'deposit' },
-      { id: 'TXN023', date: '2023-06-13', merchant: 'Amazon', amount: -120.50, status: 'completed', type: 'purchase' },
-      { id: 'TXN024', date: '2023-06-12', merchant: 'Netflix', amount: -14.99, status: 'completed', type: 'subscription' },
-      { id: 'TXN025', date: '2023-06-11', merchant: 'Gas Station', amount: -38.25, status: 'completed', type: 'fuel' },
-      { id: 'TXN026', date: '2023-06-10', merchant: 'Target', amount: -75.30, status: 'completed', type: 'purchase' },
-      { id: 'TXN027', date: '2023-06-09', merchant: 'Uber', amount: -25.50, status: 'completed', type: 'transportation' },
-      { id: 'TXN028', date: '2023-06-08', merchant: 'Online Shopping', amount: -65.75, status: 'completed', type: 'purchase' },
-      { id: 'TXN029', date: '2023-06-07', merchant: 'Starbucks', amount: -4.50, status: 'completed', type: 'dining' },
-      { id: 'TXN030', date: '2023-06-06', merchant: 'Walmart', amount: -95.20, status: 'completed', type: 'purchase' }
-    ]
-  },
-  {
-    id: 'CUST004',
-    name: 'Emily Davis',
-    email: 'emily.davis@example.com',
-    phone: '(555) 456-7890',
-    address: '321 Elm St, Nowhere, FL 33101',
-    accountNumber: '**** **** **** 3456',
-    accountType: 'Savings',
-    balance: 5430.25,
-    transactions: [
-      { id: 'TXN031', date: '2023-06-15', merchant: 'Amazon', amount: -75.50, status: 'completed', type: 'purchase' },
-      { id: 'TXN032', date: '2023-06-14', merchant: 'Salary Deposit', amount: 2900.00, status: 'completed', type: 'deposit' },
-      { id: 'TXN033', date: '2023-06-13', merchant: 'Restaurant', amount: -42.80, status: 'completed', type: 'dining' },
-      { id: 'TXN034', date: '2023-06-12', merchant: 'Spotify', amount: -9.99, status: 'completed', type: 'subscription' },
-      { id: 'TXN035', date: '2023-06-11', merchant: 'Target', amount: -110.25, status: 'completed', type: 'purchase' },
-      { id: 'TXN036', date: '2023-06-10', merchant: 'Gas Station', amount: -45.30, status: 'completed', type: 'fuel' },
-      { id: 'TXN037', date: '2023-06-09', merchant: 'Lyft', amount: -28.75, status: 'completed', type: 'transportation' },
-      { id: 'TXN038', date: '2023-06-08', merchant: 'Online Shopping', amount: -85.60, status: 'completed', type: 'purchase' },
-      { id: 'TXN039', date: '2023-06-07', merchant: 'Starbucks', amount: -5.25, status: 'completed', type: 'dining' },
-      { id: 'TXN040', date: '2023-06-06', merchant: 'Walmart', amount: -65.40, status: 'completed', type: 'purchase' }
-    ]
-  }
-];
+import { CustomerContext, Transaction } from '../types';
+import { DatabaseService } from '../services/database';
+import AddCustomerDialog from './AddCustomerDialog';
 
 interface CustomerSearchProps {
-  onCustomerSelect?: (customer: any) => void;
+  onCustomerSelect?: (customer: CustomerContext) => void;
 }
 
 const CustomerSearch: React.FC<CustomerSearchProps> = ({ onCustomerSelect }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
+  const [searchResults, setSearchResults] = useState<CustomerContext[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerContext | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [searchPerformed, setSearchPerformed] = useState(false);
+  const [showAddCustomerDialog, setShowAddCustomerDialog] = useState(false);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setIsLoading(true);
     setSearchPerformed(true);
     
-    // Simulate API call delay
-    setTimeout(() => {
-      const results = dummyCustomers.filter(customer => 
-        customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        customer.id.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    try {
+      console.log('Searching for:', searchQuery);
       
+      // Get all customers from the database
+      const customers = await DatabaseService.getAllCustomers();
+      console.log('Customers from database:', customers);
+      
+      if (customers.length === 0) {
+        console.log('No customers found in database');
+      } else {
+        console.log('Found', customers.length, 'customers in database');
+      }
+      
+      // Filter customers based on search query
+      const results = customers.filter(customer => {
+        const nameMatch = customer.name.toLowerCase().includes(searchQuery.toLowerCase());
+        const emailMatch = customer.email.toLowerCase().includes(searchQuery.toLowerCase());
+        const idMatch = customer.id.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        console.log('Customer:', customer.name, 
+          'Name match:', nameMatch, 
+          'Email match:', emailMatch, 
+          'ID match:', idMatch);
+        
+        return nameMatch || emailMatch || idMatch;
+      });
+      
+      console.log('Filtered results:', results);
       setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching customers:', error);
+      setSearchResults([]);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleCustomerSelect = (customer: any) => {
+  const handleCustomerSelect = (customer: CustomerContext) => {
     setSelectedCustomer(customer);
     if (onCustomerSelect) {
       onCustomerSelect(customer);
@@ -197,6 +134,13 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({ onCustomerSelect }) => 
     }
   };
 
+  const handleCustomerAdded = (customer: CustomerContext) => {
+    // Refresh search results if we have a search query
+    if (searchQuery) {
+      handleSearch();
+    }
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -234,6 +178,16 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({ onCustomerSelect }) => 
             </Button>
           </Grid>
         </Grid>
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Button 
+            variant="outlined" 
+            color="primary" 
+            onClick={() => setShowAddCustomerDialog(true)}
+            startIcon={<AddIcon />}
+          >
+            Add New Customer
+          </Button>
+        </Box>
       </Paper>
       
       {searchPerformed && !isLoading && searchResults.length === 0 && (
@@ -351,23 +305,15 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({ onCustomerSelect }) => 
                     <TableHead>
                       <TableRow>
                         <TableCell>Date</TableCell>
-                        <TableCell>Merchant</TableCell>
-                        <TableCell>Type</TableCell>
-                        <TableCell align="right">Amount</TableCell>
+                        <TableCell>Description</TableCell>
+                        <TableCell>Amount</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {selectedCustomer.transactions.map((transaction: any) => (
+                      {selectedCustomer.transactions.map((transaction) => (
                         <TableRow key={transaction.id} hover>
                           <TableCell>{formatDate(transaction.date)}</TableCell>
-                          <TableCell>{transaction.merchant}</TableCell>
-                          <TableCell>
-                            <Chip 
-                              label={transaction.type} 
-                              size="small" 
-                              color={getTransactionTypeColor(transaction.type) as any}
-                            />
-                          </TableCell>
+                          <TableCell>{transaction.description}</TableCell>
                           <TableCell align="right" sx={{ 
                             color: transaction.amount > 0 ? 'success.main' : 'error.main',
                             fontWeight: 'bold'
@@ -384,6 +330,12 @@ const CustomerSearch: React.FC<CustomerSearchProps> = ({ onCustomerSelect }) => 
           </Grid>
         </Grid>
       )}
+      
+      <AddCustomerDialog
+        open={showAddCustomerDialog}
+        onClose={() => setShowAddCustomerDialog(false)}
+        onCustomerAdded={handleCustomerAdded}
+      />
     </Box>
   );
 };
