@@ -73,5 +73,4 @@ The application follows a modern microservices architecture:
 - Environment-based configuration
 
 ## License
-
-MIT 
+© Rishijeet 
